@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import {
     signInWithEmailAndPassword,
-    sendPasswordResetEmail            // 👈 NEW
+    sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useNavigate, Link } from 'react-router-dom';
@@ -11,11 +11,13 @@ function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [err, setErr] = useState('');
-    const [showReset, setShowReset] = useState(false);   // 👈 NEW
-    const [resetEmail, setResetEmail] = useState('');    // 👈 NEW
-    const [resetMsg, setResetMsg] = useState('');        // 👈 NEW
+    const [showReset, setShowReset] = useState(false);
+    const [resetEmail, setResetEmail] = useState('');
+    const [resetMsg, setResetMsg] = useState('');
 
     const navigate = useNavigate();
+
+    /* ---------- handlers ---------- */
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -32,12 +34,20 @@ function Login() {
         e.preventDefault();
         try {
             await sendPasswordResetEmail(auth, resetEmail);
-            setResetMsg('✅  Reset link sent! Check your inbox.');
+            setResetMsg('✅ Reset link sent! Check your inbox.');
         } catch (error) {
             console.error(error);
-            setResetMsg('❌  Could not send reset email.');
+            setResetMsg('❌ Could not send reset email.');
         }
     };
+
+    const closeResetModal = () => {
+        setShowReset(false);
+        setResetEmail('');
+        setResetMsg('');
+    };
+
+    /* ---------- ui ---------- */
 
     return (
         <div style={styles.page}>
@@ -45,6 +55,7 @@ function Login() {
                 <h2 style={styles.title}>🔐 Login to TIMUU</h2>
 
                 {err && <p style={styles.error}>{err}</p>}
+
                 <input
                     type="email"
                     placeholder="Email"
@@ -62,9 +73,11 @@ function Login() {
                     style={styles.input}
                 />
 
-                <button type="submit" style={styles.button}>Login</button>
+                <button type="submit" style={styles.button}>
+                    Login
+                </button>
 
-                {/* ---- Forgot‑password link ---- */}
+                {/* forgot‑password */}
                 <p style={styles.forgotText}>
                     <button
                         type="button"
@@ -75,7 +88,7 @@ function Login() {
                     </button>
                 </p>
 
-                {/* ---- Sign‑up link ---- */}
+                {/* sign‑up */}
                 <p style={styles.signupText}>
                     New here?{' '}
                     <Link to="/signup" style={styles.signupLink}>
@@ -84,13 +97,15 @@ function Login() {
                 </p>
             </form>
 
-            {/* -------- Password‑reset modal -------- */}
+            {/* ---------- reset modal ---------- */}
             {showReset && (
                 <div style={styles.modalBackdrop}>
                     <div style={styles.modal}>
                         <h3 style={{ marginBottom: '1rem' }}>🔑 Reset password</h3>
-                        {resetMsg && <p>{resetMsg}</p>}
-                        {!resetMsg && (
+
+                        {resetMsg ? (
+                            <p style={{ textAlign: 'center' }}>{resetMsg}</p>
+                        ) : (
                             <>
                                 <input
                                     type="email"
@@ -105,13 +120,14 @@ function Login() {
                                 </button>
                             </>
                         )}
+
                         <button
-                            onClick={() => {
-                                setShowReset(false);
-                                setResetMsg('');
-                                setResetEmail('');
+                            onClick={closeResetModal}
+                            style={{
+                                ...styles.button,
+                                backgroundColor: '#444',
+                                marginTop: '1rem',
                             }}
-                            style={{ ...styles.button, backgroundColor: '#444', marginTop: '1rem' }}
                         >
                             Close
                         </button>
@@ -122,6 +138,7 @@ function Login() {
     );
 }
 
+/* ---------- styles ---------- */
 const styles = {
     page: {
         backgroundColor: '#000',
@@ -205,5 +222,5 @@ const styles = {
         boxShadow: '0 0 30px #000',
     },
 };
-export default Login;
 
+export default Login;
