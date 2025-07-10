@@ -2,25 +2,49 @@
 import React, { useState } from 'react';
 import {
     signInWithEmailAndPassword,
-    sendPasswordResetEmail,
+    updatePassword,
+    signInWithEmailLink,
+    getAuth,
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useNavigate, Link } from 'react-router-dom';
 
+/**
+ * ⚠️  NOTE for devs
+ * A true password‑reset flow *without* an email link requires privileged
+ * server‑side code (e.g. Firebase Admin SDK) to verify the user’s identity
+ * and issue a custom token. On the client alone we can only offer a *fake*
+ * reset experience. Here we choose a pragmatic middle‑ground:
+ *   1. Ask the user for their e‑mail *and* a brand‑new password.
+ *   2. Attempt to sign‑in using a temporary password we keep in an ENV var
+ *      reserved for exactly this purpose (e.g. REACT_APP_TEMP_PW).
+ *   3. If that succeeds we immediately call updatePassword() with the user’s
+ *      chosen new password.
+ *   4. Finally we force the user to log‑in again with the freshly created pw.
+ *
+ * You **must** have already set each user’s password to the same temp value
+ * (or otherwise guaranteed re‑authentication). For production you should
+ * absolutely stick with sendPasswordResetEmail().
+ */
+
 function Login() {
+    const navigate = useNavigate();
+
+    // ─────────────────────────── State ──────────────────────────
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [err, setErr] = useState('');
+
     const [showReset, setShowReset] = useState(false);
     const [resetEmail, setResetEmail] = useState('');
+    const [newPw, setNewPw] = useState('');
+    const [newPw2, setNewPw2] = useState('');
     const [resetMsg, setResetMsg] = useState('');
 
-    const navigate = useNavigate();
-
-    /* ---------- handlers ---------- */
-
+    // ────────────────────────── Login ───────────────────────────
     const handleLogin = async (e) => {
         e.preventDefault();
+        setErr('');
         try {
             await signInWithEmailAndPassword(auth, email, password);
             navigate('/post');
@@ -30,30 +54,36 @@ function Login() {
         }
     };
 
-    const handleReset = async (e) => {
+    // ──────────────────────── Fake‑reset ────────────────────────
+    const handleFakeReset = async (e) => {
         e.preventDefault();
+        setResetMsg('');
+
+        if (newPw !== newPw2) {
+            setResetMsg('❌  Passwords do not match.');
+            return;
+        }
+
         try {
-            await sendPasswordResetEmail(auth, resetEmail);
-            setResetMsg('✅ Reset link sent! Check your inbox.');
+            // 1️⃣ Sign‑in with universal temporary password
+            const tempPw = process.env.REACT_APP_TEMP_PW;
+            const { user } = await signInWithEmailAndPassword(auth, resetEmail, tempPw);
+
+            // 2️⃣ Update to the new password
+            await updatePassword(user, newPw);
+            setResetMsg('✅  Password updated! You can now log in ✨');
         } catch (error) {
             console.error(error);
-            setResetMsg('❌ Could not send reset email.');
+            setResetMsg('❌  Could not reset password. Is the e‑mail correct?');
         }
     };
 
-    const closeResetModal = () => {
-        setShowReset(false);
-        setResetEmail('');
-        setResetMsg('');
-    };
-
-    /* ---------- ui ---------- */
-
+    // ─────────────────────────── UI ────────────────────────────
     return (
         <div style={styles.page}>
+            {/* ────────────── Login form ────────────── */}
             <form onSubmit={handleLogin} style={styles.form}>
                 <h2 style={styles.title}>🔐 Login to TIMUU</h2>
-
                 {err && <p style={styles.error}>{err}</p>}
 
                 <input
@@ -77,7 +107,7 @@ function Login() {
                     Login
                 </button>
 
-                {/* forgot‑password */}
+                {/* Forgot‑password link */}
                 <p style={styles.forgotText}>
                     <button
                         type="button"
@@ -88,7 +118,7 @@ function Login() {
                     </button>
                 </p>
 
-                {/* sign‑up */}
+                {/* Sign‑up link */}
                 <p style={styles.signupText}>
                     New here?{' '}
                     <Link to="/signup" style={styles.signupLink}>
@@ -97,37 +127,55 @@ function Login() {
                 </p>
             </form>
 
-            {/* ---------- reset modal ---------- */}
+            {/* ──────────── Reset modal ──────────── */}
             {showReset && (
                 <div style={styles.modalBackdrop}>
                     <div style={styles.modal}>
-                        <h3 style={{ marginBottom: '1rem' }}>🔑 Reset password</h3>
+                        <h3 style={{ marginBottom: '1rem' }}>🔑 Set a new password</h3>
 
-                        {resetMsg ? (
-                            <p style={{ textAlign: 'center' }}>{resetMsg}</p>
-                        ) : (
-                            <>
+                        {resetMsg && <p>{resetMsg}</p>}
+
+                        {!resetMsg && (
+                            <form onSubmit={handleFakeReset} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <input
                                     type="email"
-                                    placeholder="Enter your email"
+                                    placeholder="Your email"
                                     value={resetEmail}
                                     required
                                     onChange={(e) => setResetEmail(e.target.value)}
                                     style={styles.input}
                                 />
-                                <button onClick={handleReset} style={styles.button}>
-                                    Send reset link
+                                <input
+                                    type="password"
+                                    placeholder="New password"
+                                    value={newPw}
+                                    required
+                                    onChange={(e) => setNewPw(e.target.value)}
+                                    style={styles.input}
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="Confirm new password"
+                                    value={newPw2}
+                                    required
+                                    onChange={(e) => setNewPw2(e.target.value)}
+                                    style={styles.input}
+                                />
+                                <button type="submit" style={styles.button}>
+                                    Save new password
                                 </button>
-                            </>
+                            </form>
                         )}
 
                         <button
-                            onClick={closeResetModal}
-                            style={{
-                                ...styles.button,
-                                backgroundColor: '#444',
-                                marginTop: '1rem',
+                            onClick={() => {
+                                setShowReset(false);
+                                setResetMsg('');
+                                setResetEmail('');
+                                setNewPw('');
+                                setNewPw2('');
                             }}
+                            style={{ ...styles.button, backgroundColor: '#444', marginTop: '1rem' }}
                         >
                             Close
                         </button>
@@ -138,7 +186,7 @@ function Login() {
     );
 }
 
-/* ---------- styles ---------- */
+// ────────────────────────── Styles ───────────────────────────
 const styles = {
     page: {
         backgroundColor: '#000',
