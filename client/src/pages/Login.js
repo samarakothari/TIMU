@@ -1,31 +1,61 @@
 // src/pages/Login.js
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import {
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail,
+} from 'firebase/auth';
 import { auth } from '../firebase';
-import { useNavigate, Link } from 'react-router-dom'; // ⬅️ Added Link for navigation
+import { useNavigate, Link } from 'react-router-dom';
 
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [err, setErr] = useState('');
+    const [showReset, setShowReset] = useState(false);
+    const [resetEmail, setResetEmail] = useState('');
+    const [resetMsg, setResetMsg] = useState('');
+
     const navigate = useNavigate();
+
+    /* ---------- handlers ---------- */
 
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            navigate('/post'); // Redirect to Post after successful login
+            navigate('/post');
         } catch (error) {
             console.error(error);
             setErr('Login failed. Check your credentials.');
         }
     };
 
+    const handleReset = async (e) => {
+        e.preventDefault();
+        try {
+            await sendPasswordResetEmail(auth, resetEmail);
+            setResetMsg('✅ Reset link sent! Check your inbox.');
+        } catch (error) {
+            console.error(error);
+            setResetMsg('❌ Could not send reset email.');
+        }
+    };
+
+    const closeResetModal = () => {
+        setShowReset(false);
+        setResetEmail('');
+        setResetMsg('');
+    };
+
+    /* ---------- ui ---------- */
+
     return (
         <div style={styles.page}>
             <form onSubmit={handleLogin} style={styles.form}>
                 <h2 style={styles.title}>🔐 Login to TIMUU</h2>
+
                 {err && <p style={styles.error}>{err}</p>}
+
                 <input
                     type="email"
                     placeholder="Email"
@@ -42,9 +72,23 @@ function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                     style={styles.input}
                 />
-                <button type="submit" style={styles.button}>Login</button>
 
-                {/* 👇 Add Sign Up Option */}
+                <button type="submit" style={styles.button}>
+                    Login
+                </button>
+
+                {/* forgot‑password */}
+                <p style={styles.forgotText}>
+                    <button
+                        type="button"
+                        onClick={() => setShowReset(true)}
+                        style={styles.forgotBtn}
+                    >
+                        Forgot password?
+                    </button>
+                </p>
+
+                {/* sign‑up */}
                 <p style={styles.signupText}>
                     New here?{' '}
                     <Link to="/signup" style={styles.signupLink}>
@@ -52,10 +96,49 @@ function Login() {
                     </Link>
                 </p>
             </form>
+
+            {/* ---------- reset modal ---------- */}
+            {showReset && (
+                <div style={styles.modalBackdrop}>
+                    <div style={styles.modal}>
+                        <h3 style={{ marginBottom: '1rem' }}>🔑 Reset password</h3>
+
+                        {resetMsg ? (
+                            <p style={{ textAlign: 'center' }}>{resetMsg}</p>
+                        ) : (
+                            <>
+                                <input
+                                    type="email"
+                                    placeholder="Enter your email"
+                                    value={resetEmail}
+                                    required
+                                    onChange={(e) => setResetEmail(e.target.value)}
+                                    style={styles.input}
+                                />
+                                <button onClick={handleReset} style={styles.button}>
+                                    Send reset link
+                                </button>
+                            </>
+                        )}
+
+                        <button
+                            onClick={closeResetModal}
+                            style={{
+                                ...styles.button,
+                                backgroundColor: '#444',
+                                marginTop: '1rem',
+                            }}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
+/* ---------- styles ---------- */
 const styles = {
     page: {
         backgroundColor: '#000',
@@ -108,6 +191,35 @@ const styles = {
         color: '#4fc3f7',
         textDecoration: 'none',
         fontWeight: 'bold',
+    },
+    forgotText: {
+        textAlign: 'center',
+        marginTop: '.5rem',
+    },
+    forgotBtn: {
+        background: 'none',
+        border: 'none',
+        color: '#4fc3f7',
+        cursor: 'pointer',
+        textDecoration: 'underline',
+        fontSize: '.9rem',
+    },
+    modalBackdrop: {
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 999,
+    },
+    modal: {
+        background: '#111',
+        padding: '2rem',
+        borderRadius: '12px',
+        maxWidth: '400px',
+        width: '90%',
+        boxShadow: '0 0 30px #000',
     },
 };
 
