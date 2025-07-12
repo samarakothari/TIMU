@@ -76,6 +76,7 @@ const styles = {
         color: '#fff',
         minHeight: '100vh',
         fontFamily: 'system-ui, sans-serif',
+        border: 'none',
     },
     title: {
         fontSize: 'clamp(2rem, 5vw, 3rem)',

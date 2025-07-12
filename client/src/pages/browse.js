@@ -193,6 +193,7 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: '2rem',
         width: '100%',
         maxWidth: '900px',
@@ -207,12 +208,14 @@ const styles = {
         margin: '0 auto',
         padding: '1rem',
         boxSizing: 'border-box',
+        display: 'flex',
+        justifyContent: 'center',
     },
 
     post: {
         width: '100%',
         backgroundColor: '#111',
-        border: '2px solid #fff',
+        border: 'none',
         boxShadow: '0 8px 32px rgba(255, 255, 255, 0.1)',
         display: 'flex',
         flexDirection: 'column',
