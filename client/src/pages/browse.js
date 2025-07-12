@@ -209,7 +209,7 @@ const styles = {
         boxSizing: 'border-box',
         display: 'flex',
         justifyContent: 'center',
-        paddingLeft: '1rem', // much more left
+        paddingRight: '1rem', // much more left
 
     },
 
