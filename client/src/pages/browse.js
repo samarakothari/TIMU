@@ -172,11 +172,15 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'center',
         padding: '2rem 1rem',
         boxSizing: 'border-box',
         overflowX: 'hidden',
         fontFamily: 'system-ui, sans-serif',
+        margin: 0,
+        border: 'none',
     },
+
     title: {
         fontSize: 'clamp(2rem, 5vw, 4rem)',
         fontWeight: '900',
@@ -184,6 +188,7 @@ const styles = {
         textAlign: 'center',
         color: '#fff',
     },
+
     contentWrapper: {
         display: 'flex',
         flexDirection: 'column',
@@ -191,14 +196,19 @@ const styles = {
         gap: '2rem',
         width: '100%',
         maxWidth: '900px',
+        margin: '0 auto',
+        padding: '0 1rem',
+        boxSizing: 'border-box',
     },
+
     postContainer: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '70%',
-        flexWrap: 'wrap',
+        maxWidth: '600px',
+        width: '100%',
+        margin: '0 auto',
+        padding: '1rem',
+        boxSizing: 'border-box',
     },
+
     post: {
         width: '100%',
         backgroundColor: '#111',
@@ -213,12 +223,14 @@ const styles = {
         overflowY: 'auto',
         maxHeight: '40vh',
     },
+
     postTitle: {
         fontSize: 'clamp(1.3rem, 2vw, 1.8rem)',
         fontWeight: '500',
         marginBottom: '0.8rem',
         color: '#fff',
     },
+
     story: {
         fontSize: 'clamp(1rem, 1.5vw, 1.2rem)',
         lineHeight: '1.65',
@@ -226,6 +238,7 @@ const styles = {
         fontWeight: '300',
         color: '#ddd',
     },
+
     meta: {
         fontSize: 'clamp(0.9rem, 1.2vw, 1rem)',
         opacity: 0.9,
@@ -236,9 +249,11 @@ const styles = {
         gap: '0.5rem',
         flexWrap: 'wrap',
     },
+
     username: {
         fontWeight: '600',
     },
+
     reactions: {
         marginTop: '1.5rem',
         display: 'flex',
@@ -246,6 +261,7 @@ const styles = {
         justifyContent: 'center',
         flexWrap: 'wrap',
     },
+
     reaction: {
         cursor: 'pointer',
         background: '#fff',
@@ -256,6 +272,7 @@ const styles = {
         padding: '0.4rem 0.8rem',
         borderRadius: '10px',
     },
+
     deleteButton: {
         marginTop: '2rem',
         alignSelf: 'center',
@@ -268,6 +285,7 @@ const styles = {
         fontSize: '1rem',
         fontWeight: '600',
     },
+
     arrowContainer: {
         display: 'flex',
         justifyContent: 'center',
@@ -276,6 +294,7 @@ const styles = {
         flexWrap: 'wrap',
         width: '100%',
     },
+
     arrow: {
         fontSize: '1rem',
         fontWeight: '600',

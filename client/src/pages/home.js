@@ -149,6 +149,7 @@ function Home() {
 
                             {'\n\n'}1. Use of the Application:
                             - Users must be at least 13 years of age to access or use the Application.
+                            - Users must be under 21 years of age to post content on the Application.
                             - Users are solely responsible for their actions within the Application and any content they submit or share.
                             - The Application must not be used to engage in unlawful, harmful, or inappropriate behavior, including but not limited to the dissemination of explicit material.
 
