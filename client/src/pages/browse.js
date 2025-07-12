@@ -201,7 +201,6 @@ const styles = {
         padding: '0 1rem',
         boxSizing: 'border-box',
     },
-
     postContainer: {
         maxWidth: '600px',
         width: '100%',
@@ -210,7 +209,10 @@ const styles = {
         boxSizing: 'border-box',
         display: 'flex',
         justifyContent: 'center',
+        paddingLeft: 'calc(1rem + 2px)', // tiny nudge to the right
     },
+
+
 
     post: {
         width: '100%',
@@ -239,7 +241,7 @@ const styles = {
         lineHeight: '1.65',
         marginBottom: '1.5rem',
         fontWeight: '300',
-        color: '#ddd',
+        color: '#ddd'
     },
 
     meta: {
