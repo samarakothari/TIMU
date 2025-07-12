@@ -209,7 +209,7 @@ const styles = {
         boxSizing: 'border-box',
         display: 'flex',
         justifyContent: 'center',
-        paddingLeft: 'calc(1rem + 2px)', // tiny nudge to the right
+        paddingLeft: 'calc(1rem + 5px)', // tiny nudge to the right
     },
 
 
