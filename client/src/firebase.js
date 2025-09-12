@@ -2,13 +2,13 @@
 //----------------------------------------------
 // Initialize Firebase for TIMUU
 //----------------------------------------------
-import { initializeApp } from 'firebase/app';
+import { initializeApp } from "firebase/app";
 import {
-    getAuth,
-    setPersistence,
-    browserLocalPersistence, // optional: remember login
-} from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+  getAuth,
+  setPersistence,
+  browserLocalPersistence, // optional: remember login
+} from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 // import { getStorage }   from 'firebase/storage'; // <- enable later if you need storage
 
 //------------------------------------------------
@@ -16,12 +16,12 @@ import { getFirestore } from 'firebase/firestore';
 //    in a .env file for public repos 😉)
 //------------------------------------------------
 const firebaseConfig = {
-    apiKey: 'AIzaSyCkQ1mPuJY-TffBUC7w-PPeb6AttOc7Ct0',
-    authDomain: 'timuu-9fed8.firebaseapp.com',
-    projectId: 'timuu-9fed8',
-    storageBucket: 'timuu-9fed8.appspot.com',
-    messagingSenderId: '372152667406',
-    appId: '1:372152667406:web:4649ddba60228264eddb5f',
+  apiKey: "AIzaSyCkQ1mPuJY-TffBUC7w-PPeb6AttOc7Ct0",
+  authDomain: "timuu-9fed8.firebaseapp.com",
+  projectId: "timuu-9fed8",
+  storageBucket: "timuu-9fed8.appspot.com",
+  messagingSenderId: "372152667406",
+  appId: "1:372152667406:web:4649ddba60228264eddb5f",
 };
 
 //------------------------------------------------

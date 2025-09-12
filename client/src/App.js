@@ -1,17 +1,16 @@
 // src/App.js
-import React from 'react';
+import React from "react";
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './pages/home';
-import Browse from './pages/browse';
-import Post from './pages/post';
-import Signup from './pages/Signup';
-import Login from './pages/Login';
-import Leaderboard from './pages/leaderboard';
-import Navbar from './components/Navbar';
-import { AuthProvider } from './context/AuthContext';
-import { PostProvider } from './context/PostContext';
-
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from "./pages/home";
+import Browse from "./pages/browse";
+import Post from "./pages/post";
+import Signup from "./pages/Signup";
+import Login from "./pages/Login";
+import Leaderboard from "./pages/leaderboard";
+import Navbar from "./components/Navbar";
+import { AuthProvider } from "./context/AuthContext";
+import { PostProvider } from "./context/PostContext";
 
 function App() {
   return (
@@ -27,8 +26,6 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-
-
           </Routes>
         </Router>
       </PostProvider>
