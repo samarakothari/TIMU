@@ -21,9 +21,6 @@ function Post() {
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
 
-  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
-
-  const isMobile = screenWidth < 768;
 
   useEffect(() => {
     // Add Google Fonts and animation keyframes
@@ -123,10 +120,7 @@ function Post() {
     `;
     document.head.appendChild(style);
 
-    const onResize = () => setScreenWidth(window.innerWidth);
-    window.addEventListener("resize", onResize);
     return () => {
-      window.removeEventListener("resize", onResize);
       if (document.head.contains(style)) {
         document.head.removeChild(style);
       }

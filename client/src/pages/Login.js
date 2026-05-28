@@ -7,6 +7,163 @@ import {
 import { auth } from "../firebase";
 import { useNavigate, Link } from "react-router-dom";
 
+const updatedCSSStyles = `
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #f1f5f9; /* Changed to light slate background */
+  color: #1e293b; /* Changed to dark text */
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -2;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.2; transform: scale(1); } /* Reduced opacity for light theme */
+  50% { opacity: 0.4; transform: scale(1.1); }
+}
+
+@keyframes slideInUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(50px) scale(0.95);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes modalFade {
+  from { 
+    opacity: 0; 
+    transform: scale(0.9);
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+}
+
+.floating-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(60px);
+  z-index: -1;
+  animation: float 12s ease-in-out infinite;
+}
+
+.floating-orb:nth-child(1) {
+  top: 10%;
+  left: 15%;
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(45deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.15)); /* Reduced opacity */
+  animation-delay: -2s;
+}
+
+.floating-orb:nth-child(2) {
+  bottom: 15%;
+  right: 20%;
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.15)); /* Reduced opacity */
+  animation-delay: -6s;
+}
+
+.floating-orb:nth-child(3) {
+  top: 50%;
+  left: 5%;
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(45deg, rgba(34, 197, 94, 0.15), rgba(168, 85, 247, 0.1)); /* Reduced opacity */
+  animation: pulse 8s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+/* Enhanced hover styles */
+@media (hover: hover) and (pointer: fine) {
+  .login-input:hover {
+    border-color: rgba(168, 85, 247, 0.6) !important;
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.2) !important;
+    transform: translateY(-1px) !important;
+  }
+  
+  .login-button:hover {
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 15px 35px rgba(168, 85, 247, 0.4) !important;
+  }
+  
+  .forgot-button:hover {
+    color: rgba(236, 72, 153, 0.9) !important;
+    transform: scale(1.05) !important;
+  }
+  
+  .signup-link:hover {
+    color: rgba(236, 72, 153, 0.9) !important;
+    transform: scale(1.05) !important;
+  }
+}
+
+/* Input placeholder styles for light theme */
+.login-input::placeholder {
+  color: #94a3b8; /* slate-400 for placeholder text */
+}
+
+/* Enhanced input focus for light theme */
+.login-input:focus {
+  border-color: rgba(168, 85, 247, 0.6);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .login-container {
+    margin: 1rem !important;
+    padding: 2rem 1.5rem !important;
+  }
+  
+  .login-title {
+    font-size: 1.8rem !important;
+  }
+  
+  .login-input, .login-button {
+    padding: 14px 18px !important;
+    font-size: 0.95rem !important;
+  }
+  
+  .modal-container {
+    margin: 1rem !important;
+    padding: 1.5rem !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .login-container {
+    max-width: 450px !important;
+  }
+}
+`;
+
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,165 +178,7 @@ function Login() {
 
   React.useEffect(() => {
     const style = document.createElement("style");
-    style.innerHTML = `
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap');
-            
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            
-            body {
-              background: linear-gradient(135deg, #000000 0%, #0d0d0d 30%, #1a1a1a 70%, #262626 100%);
-                color: #ffffff;
-                font-family: 'Inter', sans-serif;
-                overflow-x: hidden;
-                min-height: 100vh;
-                position: relative;
-            }
-            
-            body::before {
-                content: '';
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: -2;
-            }
-            
-            @keyframes pulse {
-                0%, 100% { opacity: 0.3; transform: scale(1); }
-                50% { opacity: 0.6; transform: scale(1.1); }
-            }
-            
-            @keyframes slideInUp {
-                from { 
-                    opacity: 0; 
-                    transform: translateY(50px) scale(0.95);
-                }
-                to { 
-                    opacity: 1; 
-                    transform: translateY(0) scale(1);
-                }
-            }
-            
-            @keyframes shimmer {
-                0% { transform: translateX(-100%); }
-                100% { transform: translateX(100%); }
-            }
-            
-            @keyframes modalFade {
-                from { 
-                    opacity: 0; 
-                    transform: scale(0.9);
-                }
-                to { 
-                    opacity: 1; 
-                    transform: scale(1);
-                }
-            }
-            
-            .floating-orb {
-                position: fixed;
-                border-radius: 50%;
-                filter: blur(60px);
-                z-index: -1;
-                animation: float 12s ease-in-out infinite;
-            }
-            
-            .floating-orb:nth-child(1) {
-                top: 10%;
-                left: 15%;
-                width: 200px;
-                height: 200px;
-                background: linear-gradient(45deg, rgba(168, 85, 247, 0.4), rgba(236, 72, 153, 0.3));
-                animation-delay: -2s;
-            }
-            
-            .floating-orb:nth-child(2) {
-                bottom: 15%;
-                right: 20%;
-                width: 150px;
-                height: 150px;
-                background: linear-gradient(45deg, rgba(59, 130, 246, 0.4), rgba(147, 51, 234, 0.3));
-                animation-delay: -6s;
-            }
-            
-            .floating-orb:nth-child(3) {
-                top: 50%;
-                left: 5%;
-                width: 100px;
-                height: 100px;
-                background: linear-gradient(45deg, rgba(34, 197, 94, 0.3), rgba(168, 85, 247, 0.2));
-                animation: pulse 8s ease-in-out infinite;
-                animation-delay: -4s;
-            }
-            
-            .login-page {
-                padding: 2rem !important;
-            }
-            .login-form {
-                padding: 3rem 2.5rem !important;
-            }
-
-            /* Enhanced styles for better visual appeal */
-            @media (hover: hover) and (pointer: fine) {
-                .login-input:hover {
-                    border-color: rgba(168, 85, 247, 0.6) !important;
-                    box-shadow: 0 0 20px rgba(168, 85, 247, 0.2) !important;
-                    transform: translateY(-1px) !important;
-                }
-                
-                .login-button:hover {
-                    transform: translateY(-3px) scale(1.02) !important;
-                    box-shadow: 0 15px 35px rgba(168, 85, 247, 0.4) !important;
-                }
-                
-                .forgot-button:hover {
-                    color: rgba(236, 72, 153, 0.9) !important;
-                    transform: scale(1.05) !important;
-                }
-                
-                .signup-link:hover {
-                    color: rgba(236, 72, 153, 0.9) !important;
-                    transform: scale(1.05) !important;
-                }
-            }
-            
-            /* Mobile optimizations */
-            @media (max-width: 767px) {
-                .login-page {
-                    padding: 1rem 0.75rem !important;
-                }
-                .login-container {
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    width: 100% !important;
-                    max-width: 100% !important;
-                }
-                .login-form {
-                    padding: 2rem 1.25rem !important;
-                }
-                
-                .login-title {
-                    font-size: 1.8rem !important;
-                }
-                
-                .login-input, .login-button {
-                    padding: 14px 18px !important;
-                    font-size: 0.95rem !important;
-                }
-                
-                .modal-container {
-                    margin: 1rem !important;
-                    padding: 1.5rem !important;
-                }
-            }
-            
-            @media (min-width: 768px) and (max-width: 1024px) {
-                .login-container {
-                    max-width: 450px !important;
-                }
-            }
-        `;
+    style.innerHTML = updatedCSSStyles;
     document.head.appendChild(style);
 
     return () => {
@@ -648,165 +647,5 @@ const styles = {
     backdropFilter: "blur(10px)",
   },
 };
-
-// Updated CSS styles to match the light theme
-const updatedCSSStyles = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap');
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  background: #f1f5f9; /* Changed to light slate background */
-  color: #1e293b; /* Changed to dark text */
-  font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
-  min-height: 100vh;
-  position: relative;
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -2;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.2; transform: scale(1); } /* Reduced opacity for light theme */
-  50% { opacity: 0.4; transform: scale(1.1); }
-}
-
-@keyframes slideInUp {
-  from { 
-    opacity: 0; 
-    transform: translateY(50px) scale(0.95);
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-@keyframes modalFade {
-  from { 
-    opacity: 0; 
-    transform: scale(0.9);
-  }
-  to { 
-    opacity: 1; 
-    transform: scale(1);
-  }
-}
-
-.floating-orb {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(60px);
-  z-index: -1;
-  animation: float 12s ease-in-out infinite;
-}
-
-.floating-orb:nth-child(1) {
-  top: 10%;
-  left: 15%;
-  width: 200px;
-  height: 200px;
-  background: linear-gradient(45deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.15)); /* Reduced opacity */
-  animation-delay: -2s;
-}
-
-.floating-orb:nth-child(2) {
-  bottom: 15%;
-  right: 20%;
-  width: 150px;
-  height: 150px;
-  background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.15)); /* Reduced opacity */
-  animation-delay: -6s;
-}
-
-.floating-orb:nth-child(3) {
-  top: 50%;
-  left: 5%;
-  width: 100px;
-  height: 100px;
-  background: linear-gradient(45deg, rgba(34, 197, 94, 0.15), rgba(168, 85, 247, 0.1)); /* Reduced opacity */
-  animation: pulse 8s ease-in-out infinite;
-  animation-delay: -4s;
-}
-
-/* Enhanced hover styles */
-@media (hover: hover) and (pointer: fine) {
-  .login-input:hover {
-    border-color: rgba(168, 85, 247, 0.6) !important;
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.2) !important;
-    transform: translateY(-1px) !important;
-  }
-  
-  .login-button:hover {
-    transform: translateY(-3px) scale(1.02) !important;
-    box-shadow: 0 15px 35px rgba(168, 85, 247, 0.4) !important;
-  }
-  
-  .forgot-button:hover {
-    color: rgba(236, 72, 153, 0.9) !important;
-    transform: scale(1.05) !important;
-  }
-  
-  .signup-link:hover {
-    color: rgba(236, 72, 153, 0.9) !important;
-    transform: scale(1.05) !important;
-  }
-}
-
-/* Input placeholder styles for light theme */
-.login-input::placeholder {
-  color: #94a3b8; /* slate-400 for placeholder text */
-}
-
-/* Enhanced input focus for light theme */
-.login-input:focus {
-  border-color: rgba(168, 85, 247, 0.6);
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-/* Mobile optimizations */
-@media (max-width: 767px) {
-  .login-container {
-    margin: 1rem !important;
-    padding: 2rem 1.5rem !important;
-  }
-  
-  .login-title {
-    font-size: 1.8rem !important;
-  }
-  
-  .login-input, .login-button {
-    padding: 14px 18px !important;
-    font-size: 0.95rem !important;
-  }
-  
-  .modal-container {
-    margin: 1rem !important;
-    padding: 1.5rem !important;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1024px) {
-  .login-container {
-    max-width: 450px !important;
-  }
-}
-`;
-
-// Note: You'll need to update the useEffect in your component to use updatedCSSStyles instead of the existing style.innerHTML
 
 export default Login;
