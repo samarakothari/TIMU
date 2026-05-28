@@ -9,7 +9,6 @@ import {
 } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../firebase";
-import { color } from "framer-motion";
 
 const isMobile = window.innerWidth < 768;
 
