@@ -113,6 +113,13 @@ function Login() {
                 animation-delay: -4s;
             }
             
+            .login-page {
+                padding: 2rem !important;
+            }
+            .login-form {
+                padding: 3rem 2.5rem !important;
+            }
+
             /* Enhanced styles for better visual appeal */
             @media (hover: hover) and (pointer: fine) {
                 .login-input:hover {
@@ -139,9 +146,17 @@ function Login() {
             
             /* Mobile optimizations */
             @media (max-width: 767px) {
+                .login-page {
+                    padding: 1rem 0.75rem !important;
+                }
                 .login-container {
-                    margin: 1rem !important;
-                    padding: 2rem 1.5rem !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                }
+                .login-form {
+                    padding: 2rem 1.25rem !important;
                 }
                 
                 .login-title {
@@ -205,13 +220,13 @@ function Login() {
   /* ---------- ui ---------- */
 
   return (
-    <div style={styles.page}>
+    <div className="login-page" style={styles.page}>
       <div className="floating-orb"></div>
       <div className="floating-orb"></div>
       <div className="floating-orb"></div>
       
       <div className="login-container" style={styles.container}>
-        <form onSubmit={handleLogin} style={styles.form}>
+        <form onSubmit={handleLogin} className="login-form" style={styles.form}>
           <div style={styles.headerSection}>
             <h2 className="login-title" style={styles.title}>
               🔐 Welcome Back

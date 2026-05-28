@@ -30,15 +30,25 @@ function Browse() {
   const [editForm, setEditForm] = useState({ title: "", story: "" });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { user } = useAuth();
-
-  
+  const [isMobile, setIsMobile] = useState(false);
 
   console.log(posts,"postsposts")
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;600;700&display=swap');
+            
             
             * { margin: 0; padding: 0; box-sizing: border-box; }
             
@@ -98,6 +108,99 @@ function Browse() {
                 background: radial-gradient(circle, rgba(99, 102, 241, 0.2), transparent);
                 animation: orbitFloat 12s ease-in-out infinite;
                 animation-delay: -4s;
+            }
+
+            /* Desktop Layout Wrapper */
+            .browse-layout-wrapper {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 2rem;
+                width: 100%;
+                max-width: 900px;
+                position: relative;
+            }
+            
+            /* Desktop Arrow Navigation */
+            .desktop-nav-arrow {
+                background: rgba(255, 255, 255, 0.8);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(203, 213, 225, 0.3);
+                border-radius: 50%;
+                width: 54px;
+                height: 54px;
+                font-size: 1.8rem;
+                color: #475569;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(30, 41, 59, 0.06);
+                transition: all 0.2s ease;
+                z-index: 10;
+                outline: none;
+                user-select: none;
+            }
+            
+            .desktop-nav-arrow:hover:not(:disabled) {
+                background: rgba(251, 113, 133, 0.1);
+                border-color: rgba(251, 113, 133, 0.3);
+                color: #1e293b;
+                transform: scale(1.08);
+            }
+            
+            .desktop-nav-arrow:disabled {
+                opacity: 0.3;
+                cursor: not-allowed;
+            }
+            
+            /* Mobile Navigation Controls */
+            .mobile-nav-controls {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(203, 213, 225, 0.3);
+                border-radius: 18px;
+                padding: 6px 8px;
+                box-shadow: 0 4px 15px rgba(30, 41, 59, 0.05);
+            }
+            
+            .mobile-nav-btn {
+                background: rgba(248, 250, 252, 0.9);
+                border: 1px solid rgba(203, 213, 225, 0.2);
+                border-radius: 12px;
+                padding: 10px 16px;
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: #475569;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                outline: none;
+            }
+            
+            .mobile-nav-btn:active:not(:disabled) {
+                background: rgba(251, 113, 133, 0.08);
+                border-color: rgba(251, 113, 133, 0.2);
+                color: #1e293b;
+                transform: scale(0.95);
+            }
+            
+            .mobile-nav-btn:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+            }
+            
+            .mobile-nav-indicator {
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: #475569;
+                letter-spacing: 0.5px;
             }
         `;
     document.head.appendChild(style);
@@ -343,174 +446,249 @@ function Browse() {
         </motion.div>
       ) : (
         <div style={styles.contentWrapper}>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            style={styles.postIndicator}
-          >
-            Story {currentIndex + 1} of {posts.length}
-          </motion.div>
+          {!isMobile && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={styles.postIndicator}
+            >
+              Story {currentIndex + 1} of {posts.length}
+            </motion.div>
+          )}
 
-          <div style={styles.postContainer}>
-            <AnimatePresence custom={direction} mode="wait">
-              <motion.div
-                key={current.id}
-                custom={direction}
-                variants={variants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                style={styles.post}
-                drag={!isEditing ? "x" : false}
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.2}
-                onDragEnd={
-                  !isEditing
-                    ? (e, { offset, velocity }) => {
-                        const swipePower = Math.abs(offset.x) * velocity.x;
-                        const swipeConfidenceThreshold = 3000;
-
-                        if (swipePower > swipeConfidenceThreshold) {
-                          prev();
-                        } else if (swipePower < -swipeConfidenceThreshold) {
-                          next();
-                        }
-                      }
-                    : undefined
-                }
+          <div className="browse-layout-wrapper">
+            {!isMobile && (
+              <motion.button
+                className="desktop-nav-arrow"
+                onClick={prev}
+                disabled={posts.length <= 1 || navDisabled}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                aria-label="Previous story"
               >
-                <div style={styles.postHeader}>
-                  <div style={styles.profileContainer}>
-                    <span style={styles.profileEmoji}>
-                      {meta?.emoji || "👤"}
-                    </span>
-                    <div style={styles.profileInfo}>
-                      <span
-                        style={{
-                          ...styles.username,
-                          color: meta?.color || "#475569",
-                        }}
-                      >
-                        {meta?.displayName}
-                      </span>
-                      <span style={styles.postTime}>
-                        {new Date(
-                          current?.createdAt?.seconds * 1000 +
-                            current?.createdAt?.nanoseconds / 1e6
-                        ).toLocaleString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        })}
-                        {current?.updatedAt && " • Edited"}
-                      </span>
+                ‹
+              </motion.button>
+            )}
+
+            <div style={styles.postContainer}>
+              <AnimatePresence custom={direction} mode="wait">
+                <motion.div
+                  key={current.id}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  style={{
+                    ...styles.post,
+                    padding: isMobile ? "1.25rem" : "2.5rem",
+                    borderRadius: isMobile ? "16px" : "24px",
+                  }}
+                  drag={!isEditing && !isMobile ? "x" : false}
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.2}
+                  onDragEnd={
+                    !isEditing && !isMobile
+                      ? (e, { offset, velocity }) => {
+                          const swipePower = Math.abs(offset.x) * velocity.x;
+                          const swipeConfidenceThreshold = 3000;
+
+                          if (swipePower > swipeConfidenceThreshold) {
+                            prev();
+                          } else if (swipePower < -swipeConfidenceThreshold) {
+                            next();
+                          }
+                        }
+                      : undefined
+                  }
+                >
+                  <div style={styles.postHeader}>
+                    <div style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: "0.75rem",
+                      width: "100%",
+                      marginBottom: "1rem",
+                    }}>
+                      <div style={{ ...styles.profileContainer, marginBottom: 0 }}>
+                        <span style={styles.profileEmoji}>
+                          {meta?.emoji || "👤"}
+                        </span>
+                        <div style={styles.profileInfo}>
+                          <span
+                            style={{
+                              ...styles.username,
+                              color: meta?.color || "#475569",
+                            }}
+                          >
+                            {meta?.displayName}
+                          </span>
+                          <span style={styles.postTime}>
+                            {new Date(
+                              current?.createdAt?.seconds * 1000 +
+                                current?.createdAt?.nanoseconds / 1e6
+                            ).toLocaleString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                            })}
+                            {current?.updatedAt && " • Edited"}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Edit/Delete Actions */}
+                      {isOwner && !isEditing && (
+                        <div style={{ ...styles.actionsContainer, marginBottom: 0 }}>
+                          <motion.button
+                            onClick={handleEdit}
+                            style={styles.actionButton}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            ✏️ Edit
+                          </motion.button>
+                          <motion.button
+                            onClick={handleDelete}
+                            style={{
+                              ...styles.actionButton,
+                              ...styles.deleteButton,
+                            }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            🗑️ Delete
+                          </motion.button>
+                        </div>
+                      )}
                     </div>
+
+                    {isEditing ? (
+                      <div style={styles.editForm}>
+                        <input
+                          type="text"
+                          value={editForm.title}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, title: e.target.value })
+                          }
+                          style={styles.editInput}
+                          placeholder="Enter title..."
+                          maxLength={100}
+                        />
+                      </div>
+                    ) : (
+                      <h2 style={styles.postTitle}>{current.title}</h2>
+                    )}
                   </div>
-                  {/* Edit/Delete Actions */}
-                  {isOwner && !isEditing && (
-                    <div style={styles.actionsContainer}>
-                      <motion.button
-                        onClick={handleEdit}
-                        style={styles.actionButton}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        ✏️ Edit
-                      </motion.button>
-                      <motion.button
-                        onClick={handleDelete}
-                        style={{
-                          ...styles.actionButton,
-                          ...styles.deleteButton,
-                        }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        🗑️ Delete
-                      </motion.button>
-                    </div>
-                  )}
 
                   {isEditing ? (
                     <div style={styles.editForm}>
-                      <input
-                        type="text"
-                        value={editForm.title}
+                      <textarea
+                        value={editForm.story}
                         onChange={(e) =>
-                          setEditForm({ ...editForm, title: e.target.value })
+                          setEditForm({ ...editForm, story: e.target.value })
                         }
-                        style={styles.editInput}
-                        placeholder="Enter title..."
-                        maxLength={100}
+                        style={styles.editTextarea}
+                        placeholder="Share your story..."
+                        maxLength={2000}
+                        rows={8}
                       />
+                      <div style={styles.editActions}>
+                        <motion.button
+                          onClick={handleSaveEdit}
+                          style={{
+                            ...styles.saveButton,
+                            width: isMobile ? "100%" : "auto",
+                            justifyContent: "center",
+                          }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          💾 Save Changes
+                        </motion.button>
+                        <motion.button
+                          onClick={handleCancelEdit}
+                          style={{
+                            ...styles.cancelButton,
+                            width: isMobile ? "100%" : "auto",
+                            justifyContent: "center",
+                          }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          ❌ Cancel
+                        </motion.button>
+                      </div>
                     </div>
                   ) : (
-                    <h2 style={styles.postTitle}>{current.title}</h2>
+                    <p style={styles.story}>{current.story}</p>
                   )}
-                </div>
 
-                {isEditing ? (
-                  <div style={styles.editForm}>
-                    <textarea
-                      value={editForm.story}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, story: e.target.value })
-                      }
-                      style={styles.editTextarea}
-                      placeholder="Share your story..."
-                      maxLength={2000}
-                      rows={8}
-                    />
-                    <div style={styles.editActions}>
-                      <motion.button
-                        onClick={handleSaveEdit}
-                        style={styles.saveButton}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        💾 Save Changes
-                      </motion.button>
-                      <motion.button
-                        onClick={handleCancelEdit}
-                        style={styles.cancelButton}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        ❌ Cancel
-                      </motion.button>
+                  {!isEditing && (
+                    <div style={styles.reactionsContainer}>
+                      <div style={styles.reactions}>
+                        {EMOJIS.map((e) => (
+                          <motion.button
+                            key={e}
+                            style={styles.reaction}
+                            onClick={() => handleReaction(current.id, e)}
+                            whileHover={{ scale: 1.1, y: -2 }}
+                            whileTap={{ scale: 0.95 }}
+                            transition={{ type: "spring", stiffness: 400 }}
+                          >
+                            <span style={styles.reactionEmoji}>{e}</span>
+                            <span style={styles.reactionCount}>
+                              {current.reactions?.[e] || 0}
+                            </span>
+                          </motion.button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <p style={styles.story}>{current.story}</p>
-                )}
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
 
-                {!isEditing && (
-                  <div style={styles.reactionsContainer}>
-                    <div style={styles.reactions}>
-                      {EMOJIS.map((e) => (
-                        <motion.button
-                          key={e}
-                          style={styles.reaction}
-                          onClick={() => handleReaction(current.id, e)}
-                          whileHover={{ scale: 1.1, y: -2 }}
-                          whileTap={{ scale: 0.95 }}
-                          transition={{ type: "spring", stiffness: 400 }}
-                        >
-                          <span style={styles.reactionEmoji}>{e}</span>
-                          <span style={styles.reactionCount}>
-                            {current.reactions?.[e] || 0}
-                          </span>
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
+            {!isMobile && (
+              <motion.button
+                className="desktop-nav-arrow"
+                onClick={next}
+                disabled={posts.length <= 1 || navDisabled}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                aria-label="Next story"
+              >
+                ›
+              </motion.button>
+            )}
           </div>
+
+          {isMobile && (
+            <div className="mobile-nav-controls">
+              <button
+                className="mobile-nav-btn"
+                onClick={prev}
+                disabled={posts.length <= 1 || navDisabled}
+              >
+                ← Prev
+              </button>
+              <span className="mobile-nav-indicator">
+                Story {currentIndex + 1} of {posts.length}
+              </span>
+              <button
+                className="mobile-nav-btn"
+                onClick={next}
+                disabled={posts.length <= 1 || navDisabled}
+              >
+                Next →
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -572,7 +750,7 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     position: "relative",
-    overflow: "hidden",
+    overflowX: "hidden",
   },
 
   headerContainer: {
@@ -587,7 +765,6 @@ const styles = {
     alignItems: "center",
     gap: "0.25rem",
     marginBottom: "0.5rem",
-    animation: "float 4s ease-in-out infinite",
   },
 
   titleMain: {

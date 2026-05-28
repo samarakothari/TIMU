@@ -76,6 +76,13 @@ function Signup() {
                 animation-delay: -4s;
             }
             
+            .signup-page {
+                padding: 2rem !important;
+            }
+            .signup-form {
+                padding: 3rem 2.5rem !important;
+            }
+
             /* Enhanced styles for better visual appeal */
             @media (hover: hover) and (pointer: fine) {
                 .signup-input:hover {
@@ -97,9 +104,17 @@ function Signup() {
             
             /* Mobile optimizations */
             @media (max-width: 767px) {
+                .signup-page {
+                    padding: 1rem 0.75rem !important;
+                }
                 .signup-container {
-                    margin: 1rem !important;
-                    padding: 2rem 1.5rem !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                }
+                .signup-form {
+                    padding: 2rem 1.25rem !important;
                 }
                 
                 .signup-title {
@@ -151,13 +166,13 @@ function Signup() {
   };
 
   return (
-    <div style={styles.page}>
+    <div className="signup-page" style={styles.page}>
       <div className="floating-orb"></div>
       <div className="floating-orb"></div>
       <div className="floating-orb"></div>
 
       <div className="signup-container" style={styles.container}>
-        <form onSubmit={handleSignup} style={styles.form}>
+        <form onSubmit={handleSignup} className="signup-form" style={styles.form}>
           <div style={styles.headerSection}>
             <h2 className="signup-title" style={styles.title}>
               🧁 Join TIMUU
