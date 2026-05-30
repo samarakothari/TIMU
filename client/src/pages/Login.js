@@ -13,8 +13,8 @@ const updatedCSSStyles = `
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  background: #f1f5f9; /* Changed to light slate background */
-  color: #1e293b; /* Changed to dark text */
+  background: linear-gradient(135deg, #0f0f23 0%, #1a0a2e 30%, #16213e 70%, #0f3460 100%);
+  color: #ffffff;
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
   min-height: 100vh;
@@ -28,11 +28,57 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.2) 0%, transparent 50%);
   z-index: -2;
 }
 
+.floating-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(60px);
+  z-index: -1;
+  animation: float 12s ease-in-out infinite;
+}
+
+.floating-orb:nth-child(1) {
+  top: 10%;
+  left: 15%;
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(45deg, rgba(168, 85, 247, 0.4), rgba(236, 72, 153, 0.3));
+  animation-delay: -2s;
+}
+
+.floating-orb:nth-child(2) {
+  bottom: 15%;
+  right: 20%;
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(45deg, rgba(59, 130, 246, 0.4), rgba(147, 51, 234, 0.3));
+  animation-delay: -6s;
+}
+
+.floating-orb:nth-child(3) {
+  top: 50%;
+  left: 5%;
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(45deg, rgba(34, 197, 94, 0.3), rgba(168, 85, 247, 0.2));
+  animation: pulse 8s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-20px) rotate(120deg); }
+  66% { transform: translateY(10px) rotate(240deg); }
+}
+
 @keyframes pulse {
-  0%, 100% { opacity: 0.2; transform: scale(1); } /* Reduced opacity for light theme */
+  0%, 100% { opacity: 0.2; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(1.1); }
 }
 
@@ -63,40 +109,12 @@ body::before {
   }
 }
 
-.floating-orb {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(60px);
-  z-index: -1;
-  animation: float 12s ease-in-out infinite;
+.login-page {
+  padding: 2rem !important;
 }
 
-.floating-orb:nth-child(1) {
-  top: 10%;
-  left: 15%;
-  width: 200px;
-  height: 200px;
-  background: linear-gradient(45deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.15)); /* Reduced opacity */
-  animation-delay: -2s;
-}
-
-.floating-orb:nth-child(2) {
-  bottom: 15%;
-  right: 20%;
-  width: 150px;
-  height: 150px;
-  background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.15)); /* Reduced opacity */
-  animation-delay: -6s;
-}
-
-.floating-orb:nth-child(3) {
-  top: 50%;
-  left: 5%;
-  width: 100px;
-  height: 100px;
-  background: linear-gradient(45deg, rgba(34, 197, 94, 0.15), rgba(168, 85, 247, 0.1)); /* Reduced opacity */
-  animation: pulse 8s ease-in-out infinite;
-  animation-delay: -4s;
+.login-form {
+  padding: 3rem 2.5rem !important;
 }
 
 /* Enhanced hover styles */
@@ -123,12 +141,10 @@ body::before {
   }
 }
 
-/* Input placeholder styles for light theme */
 .login-input::placeholder {
-  color: #94a3b8; /* slate-400 for placeholder text */
+  color: #94a3b8;
 }
 
-/* Enhanced input focus for light theme */
 .login-input:focus {
   border-color: rgba(168, 85, 247, 0.6);
   box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
@@ -357,7 +373,7 @@ const styles = {
     justifyContent: "center",
     padding: "2rem",
     position: "relative",
-    background: "#f1f5f9", // Changed from dark gradient to light slate background
+    background: "transparent",
   },
   
   container: {

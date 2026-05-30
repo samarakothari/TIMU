@@ -246,7 +246,7 @@ const styles = {
     justifyContent: "center",
     padding: "2rem",
     position: "relative",
-    background: "#f1f5f9", // Changed to light slate background
+    background: "transparent",
   },
 
   container: {
