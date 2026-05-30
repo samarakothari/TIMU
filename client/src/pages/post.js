@@ -175,7 +175,8 @@ function Post() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title.trim() || storyBody.length <= prefix.length) {
+    const actualStoryContent = storyBody.slice(prefix.length).trim();
+    if (!title.trim() || !actualStoryContent) {
       setError("Both title and story are required.");
       return;
     }

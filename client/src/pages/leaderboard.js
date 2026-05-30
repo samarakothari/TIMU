@@ -290,24 +290,10 @@ const Leaderboard = () => {
         <div style={styles.container}>
           <div style={styles.statsBar}>
             <div style={styles.stat}>
-              <span style={styles.statNumber}>{posts.length}</span>
-              <span style={styles.statLabel}>Confessions</span>
-            </div>
-            <div style={styles.statDivider}></div>
-            <div style={styles.stat}>
               <span style={styles.statNumber}>
                 {posts.reduce((sum, post) => sum + post.totalReactions, 0)}
               </span>
               <span style={styles.statLabel}>Total Reactions</span>
-            </div>
-            <div style={styles.statDivider}></div>
-            <div style={styles.stat}>
-              <span style={styles.statNumber}>
-                {posts.length > 0
-                  ? Math.max(...posts.map((p) => p.totalReactions))
-                  : 0}
-              </span>
-              <span style={styles.statLabel}>High Score</span>
             </div>
           </div>
 

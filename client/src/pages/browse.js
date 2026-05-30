@@ -446,16 +446,6 @@ function Browse() {
         </motion.div>
       ) : (
         <div style={styles.contentWrapper}>
-          {!isMobile && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              style={styles.postIndicator}
-            >
-              Story {currentIndex + 1} of {posts.length}
-            </motion.div>
-          )}
-
           <div className="browse-layout-wrapper">
             {!isMobile && (
               <motion.button
@@ -524,20 +514,6 @@ function Browse() {
                             }}
                           >
                             {meta?.displayName}
-                          </span>
-                          <span style={styles.postTime}>
-                            {new Date(
-                              current?.createdAt?.seconds * 1000 +
-                                current?.createdAt?.nanoseconds / 1e6
-                            ).toLocaleString("en-US", {
-                              year: "numeric",
-                              month: "short",
-                              day: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              second: "2-digit",
-                            })}
-                            {current?.updatedAt && " • Edited"}
                           </span>
                         </div>
                       </div>
@@ -677,9 +653,6 @@ function Browse() {
               >
                 ← Prev
               </button>
-              <span className="mobile-nav-indicator">
-                Story {currentIndex + 1} of {posts.length}
-              </span>
               <button
                 className="mobile-nav-btn"
                 onClick={next}
