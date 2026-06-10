@@ -9,6 +9,7 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Leaderboard from "./pages/leaderboard";
 import Privacy from "./pages/privacy";
+import Support from "./pages/support";
 import Navbar from "./components/Navbar";
 import { AuthProvider } from "./context/AuthContext";
 import { PostProvider } from "./context/PostContext";
@@ -27,6 +28,7 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/support" element={<Support />} />
           </Routes>
         </Router>
       </PostProvider>
