@@ -469,6 +469,16 @@ export default function Navbar() {
                             <span style={styles.linkIcon} className="link-icon">🏆</span>
                             <span style={styles.linkText}>Leaderboard</span>
                         </Link>
+
+                        <Link 
+                            to="/privacy" 
+                            style={getLinkStyle('/privacy')} 
+                            className="nav-link"
+                            onClick={() => setActiveLink('/privacy')}
+                        >
+                            <span style={styles.linkIcon} className="link-icon">🔒</span>
+                            <span style={styles.linkText}>Privacy</span>
+                        </Link>
                     </div>
 
                     {/* Mobile Hamburger Menu Toggle */}
@@ -530,6 +540,15 @@ export default function Navbar() {
                             >
                                 <span style={styles.mobileLinkIcon}>🏆</span>
                                 <span>Leaderboard</span>
+                            </Link>
+
+                            <Link 
+                                to="/privacy"
+                                className={`mobile-menu-link ${activeLink === '/privacy' ? 'active' : ''}`}
+                                onClick={() => handleMobileLinkClick('/privacy')}
+                            >
+                                <span style={styles.mobileLinkIcon}>🔒</span>
+                                <span>Privacy</span>
                             </Link>
                         </div>
                     </div>
