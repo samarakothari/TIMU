@@ -73,7 +73,7 @@ function Browse() {
     }
   }, [user]);
 
-  console.log(posts,"postsposts")
+  console.log(posts, "postsposts")
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -276,16 +276,16 @@ function Browse() {
             } else {
               const fallbackAnimal =
                 FALLBACK_NAMES[
-                  Math.floor(Math.random() * FALLBACK_NAMES.length)
+                Math.floor(Math.random() * FALLBACK_NAMES.length)
                 ];
               const rand = Math.floor(100 + Math.random() * 900);
               const emoji =
                 PROFILE_EMOJIS[
-                  Math.floor(Math.random() * PROFILE_EMOJIS.length)
+                Math.floor(Math.random() * PROFILE_EMOJIS.length)
                 ];
               const color =
                 USERNAME_COLORS[
-                  Math.floor(Math.random() * USERNAME_COLORS.length)
+                Math.floor(Math.random() * USERNAME_COLORS.length)
                 ];
               const anonName = `Anonymous ${fallbackAnimal} #${rand}`;
               const newProfile = {
@@ -419,6 +419,49 @@ function Browse() {
   };
 
   // Flag and block handlers
+  // Flag and block handlers
+  const sendEmailAlert = async (action, reporterId, reporterEmail, targetId, targetEmail, postInfo) => {
+    const subject = `TIMU Safety Alert: ${action} Action Triggered`;
+    const bodyText = `
+TIMU User Safety Action Alert
+---------------------------------------
+Action Triggered: ${action}
+
+Reporter Details:
+- User ID: ${reporterId}
+- Email: ${reporterEmail}
+
+Targeted (Abusive) User Details:
+- User ID: ${targetId}
+- Email: ${targetEmail}
+
+Content Details:
+- Post ID: ${postInfo.id || "N/A"}
+- Post Title: ${postInfo.title || "N/A"}
+- Post Story: ${postInfo.story || "N/A"}
+
+Reason: ${postInfo.reason || "N/A"}
+Timestamp: ${new Date().toLocaleString()}
+    `.trim();
+
+    try {
+      // 1. Write to mail collection in Firestore for automated triggering
+      await addDoc(collection(db, "mail"), {
+        to: "samarakothari2504@gmail.com",
+        message: {
+          subject: subject,
+          text: bodyText,
+        }
+      });
+    } catch (err) {
+      console.error("Firestore mail collection trigger failed:", err);
+    }
+
+    // 2. Open client-side mail app as fallback
+    const mailtoUrl = `mailto:samarakothari2504@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+    window.location.href = mailtoUrl;
+  };
+
   const handleFlagPost = (post) => {
     setPostToReport(post);
     setReportReason("Harassment or Bullying");
@@ -459,7 +502,7 @@ function Browse() {
       let blockMessage = "";
       if (authorIdentifier) {
         const authorName = postToReport.username || usernames[postToReport.user]?.displayName || "Anonymous";
-        
+
         // Add to local blocked users state and localStorage
         const updatedBlocked = [...blockedUsers, authorIdentifier];
         setBlockedUsers(updatedBlocked);
@@ -477,15 +520,30 @@ function Browse() {
           });
         }
         blockMessage = ` and the creator "${authorName}" has been blocked`;
+
+        // Send Email Alert
+        await sendEmailAlert(
+          "Report & Block",
+          reporterId,
+          reporterEmail,
+          authorIdentifier,
+          postToReport.user || "unknown",
+          {
+            id: postToReport.id,
+            title: postToReport.title,
+            story: postToReport.story,
+            reason: reportReason
+          }
+        );
       }
 
-      setAlertModalMessage(`Thank you. This post has been reported${blockMessage}. All their content has been removed from your feed.`);
+      setAlertModalMessage(`Thank you. This post has been reported${blockMessage}. A safety report email has been sent to the developers, and all their content has been removed from your feed with in 24 hrs.`);
       setShowAlertModal(true);
       setPostToReport(null);
     } catch (error) {
       console.error("Error submitting report:", error);
       const authorName = postToReport.username || usernames[postToReport.user]?.displayName || "Anonymous";
-      setAlertModalMessage(`Thank you. This post has been reported and the creator "${authorName}" has been blocked. All their content has been removed from your feed.`);
+      setAlertModalMessage(`Thank you. This post has been reported and the creator "${authorName}" has been blocked. A safety report email has been sent to the developers, and all their content has been removed from your feed with in 24 hrs.`);
       setShowAlertModal(true);
       setPostToReport(null);
     }
@@ -537,12 +595,27 @@ function Browse() {
         status: "pending"
       });
 
-      setAlertModalMessage(`User ${userToBlock.name} has been blocked and reported. All their content has been removed from your feed.`);
+      // Send Email Alert for standalone block
+      await sendEmailAlert(
+        "Block User Only",
+        reporterId,
+        reporterEmail,
+        userToBlock.id,
+        "unknown",
+        {
+          id: "N/A",
+          title: `Blocked Creator: ${userToBlock.name}`,
+          story: `User with ID ${userToBlock.id} was blocked.`,
+          reason: "User Blocked"
+        }
+      );
+
+      setAlertModalMessage(`User ${userToBlock.name} has been blocked and reported. A safety report email has been sent to the developers, and all their content has been removed from your feed with in 24 hrs.`);
       setShowAlertModal(true);
       setUserToBlock(null);
     } catch (error) {
       console.error("Error blocking user:", error);
-      setAlertModalMessage(`User ${userToBlock.name} has been blocked and reported. All their content has been removed from your feed.`);
+      setAlertModalMessage(`User ${userToBlock.name} has been blocked and reported. A safety report email has been sent to the developers, and all their content has been removed from your feed with in 24 hrs.`);
       setShowAlertModal(true);
       setUserToBlock(null);
     }
@@ -574,8 +647,8 @@ function Browse() {
   };
 
   const filteredPosts = posts.filter(
-    (post) => 
-      !flaggedPosts.includes(post.id) && 
+    (post) =>
+      !flaggedPosts.includes(post.id) &&
       !blockedUsers.includes(post.authorId || post.user)
   );
 
@@ -589,12 +662,12 @@ function Browse() {
   const current = filteredPosts[currentIndex];
   const meta = current
     ? {
-        ...usernames[current.user],
-        displayName:
-          current.username ||
-          usernames[current.user]?.displayName ||
-          "Anonymous",
-      }
+      ...usernames[current.user],
+      displayName:
+        current.username ||
+        usernames[current.user]?.displayName ||
+        "Anonymous",
+    }
     : null;
 
   const isOwner = current && user && current.user === user?.email;
@@ -664,15 +737,15 @@ function Browse() {
                   onDragEnd={
                     !isEditing && !isMobile
                       ? (e, { offset, velocity }) => {
-                          const swipePower = Math.abs(offset.x) * velocity.x;
-                          const swipeConfidenceThreshold = 3000;
+                        const swipePower = Math.abs(offset.x) * velocity.x;
+                        const swipeConfidenceThreshold = 3000;
 
-                          if (swipePower > swipeConfidenceThreshold) {
-                            prev();
-                          } else if (swipePower < -swipeConfidenceThreshold) {
-                            next();
-                          }
+                        if (swipePower > swipeConfidenceThreshold) {
+                          prev();
+                        } else if (swipePower < -swipeConfidenceThreshold) {
+                          next();
                         }
+                      }
                       : undefined
                   }
                 >
@@ -701,7 +774,7 @@ function Browse() {
                           </span>
                         </div>
                       </div>
-                      
+
                       {/* Edit/Delete Actions */}
                       {isOwner && !isEditing && (
                         <div style={{ ...styles.actionsContainer, marginBottom: 0 }}>
@@ -941,9 +1014,9 @@ function Browse() {
             >
               <h3 style={styles.modalTitle}>⚠️ Report objectionable content?</h3>
               <p style={styles.modalText}>
-                Reporting this story hides it from your feed instantly. Developers will review this post within 24 hours.
+                Reporting this story hides it from your feed with in 24 hrs. Developers will review this post within 24 hours.
               </p>
-              
+
               <div style={styles.selectContainer}>
                 <label style={styles.selectLabel}>Select Reason:</label>
                 <select
