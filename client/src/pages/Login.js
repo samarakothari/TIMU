@@ -282,6 +282,10 @@ function Login() {
             <div style={styles.inputUnderline}></div>
           </div>
 
+          <div style={styles.eulaNotice}>
+            By signing in, you agree to our <Link to="/eula" target="_blank" style={styles.inlineLink}>EULA</Link> & <Link to="/privacy" target="_blank" style={styles.inlineLink}>Privacy Policy</Link> (with zero-tolerance for objectionable content).
+          </div>
+
           <button type="submit" className="login-button" style={styles.button}>
             <span style={styles.buttonText}>Sign In</span>
             <div style={styles.buttonShimmer}></div>
@@ -562,6 +566,18 @@ const styles = {
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
     backgroundClip: "text",
+  },
+  eulaNotice: {
+    fontSize: "0.8rem",
+    color: "#64748b",
+    lineHeight: "1.4",
+    textAlign: "center",
+    marginBottom: "1rem",
+  },
+  inlineLink: {
+    color: "#a855f7",
+    textDecoration: "underline",
+    fontWeight: "600",
   },
   
   modalBackdrop: {

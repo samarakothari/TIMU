@@ -489,6 +489,16 @@ export default function Navbar() {
                             <span style={styles.linkIcon} className="link-icon">💬</span>
                             <span style={styles.linkText}>Support</span>
                         </Link>
+
+                        <Link 
+                            to="/eula" 
+                            style={getLinkStyle('/eula')} 
+                            className="nav-link"
+                            onClick={() => setActiveLink('/eula')}
+                        >
+                            <span style={styles.linkIcon} className="link-icon">📜</span>
+                            <span style={styles.linkText}>EULA</span>
+                        </Link>
                     </div>
 
                     {/* Mobile Hamburger Menu Toggle */}
@@ -568,6 +578,15 @@ export default function Navbar() {
                             >
                                 <span style={styles.mobileLinkIcon}>💬</span>
                                 <span>Support</span>
+                            </Link>
+
+                            <Link 
+                                to="/eula"
+                                className={`mobile-menu-link ${activeLink === '/eula' ? 'active' : ''}`}
+                                onClick={() => handleMobileLinkClick('/eula')}
+                            >
+                                <span style={styles.mobileLinkIcon}>📜</span>
+                                <span>EULA</span>
                             </Link>
                         </div>
                     </div>

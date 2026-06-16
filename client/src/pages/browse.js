@@ -11,6 +11,7 @@ import {
   getDoc,
   setDoc,
   deleteDoc,
+  addDoc,
 } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,6 +32,46 @@ function Browse() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { user } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
+
+  // UGC compliance states
+  const [blockedUsers, setBlockedUsers] = useState([]);
+  const [flaggedPosts, setFlaggedPosts] = useState([]);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [postToReport, setPostToReport] = useState(null);
+  const [reportReason, setReportReason] = useState("Harassment or Bullying");
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [userToBlock, setUserToBlock] = useState(null);
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [alertModalMessage, setAlertModalMessage] = useState("");
+
+  // Sync blocked/flagged from localStorage & DB
+  useEffect(() => {
+    const userId = user ? user.uid : "anonymous";
+    const localBlocked = localStorage.getItem(`blocked_users_${userId}`);
+    if (localBlocked) {
+      setBlockedUsers(JSON.parse(localBlocked));
+    }
+    const localFlagged = localStorage.getItem(`flagged_posts_${userId}`);
+    if (localFlagged) {
+      setFlaggedPosts(JSON.parse(localFlagged));
+    }
+
+    if (user && !localBlocked) {
+      const syncBlocked = async () => {
+        try {
+          const userRef = doc(db, "usernames", user.uid);
+          const snap = await getDoc(userRef);
+          if (snap.exists() && snap.data().blockedUsers) {
+            setBlockedUsers(snap.data().blockedUsers);
+            localStorage.setItem(`blocked_users_${user.uid}`, JSON.stringify(snap.data().blockedUsers));
+          }
+        } catch (e) {
+          console.error("Error loading blocked users from DB:", e);
+        }
+      };
+      syncBlocked();
+    }
+  }, [user]);
 
   console.log(posts,"postsposts")
 
@@ -291,7 +332,7 @@ function Browse() {
   );
 
   const handleEdit = () => {
-    const current = posts[currentIndex];
+    const current = filteredPosts[currentIndex];
     if (!current || !user || current.user !== user?.email) return;
 
     setEditForm({
@@ -302,7 +343,7 @@ function Browse() {
   };
 
   const handleSaveEdit = async () => {
-    const current = posts[currentIndex];
+    const current = filteredPosts[currentIndex];
     if (!current || !user || current.user !== user?.email) return;
 
     if (!editForm.title.trim() || !editForm.story.trim()) {
@@ -331,14 +372,14 @@ function Browse() {
   };
 
   const handleDelete = () => {
-    const current = posts[currentIndex];
+    const current = filteredPosts[currentIndex];
     console.log(current, "handleDelete");
     if (!current || !user || current.user !== user?.email) return;
     setShowDeleteModal(true);
   };
 
   const confirmDelete = async () => {
-    const current = posts[currentIndex];
+    const current = filteredPosts[currentIndex];
     console.log(current, "confirmDelete");
     if (!current || !user || current.user !== user?.email) return;
 
@@ -347,8 +388,8 @@ function Browse() {
       await deleteDoc(postRef);
 
       // Navigate to next post or previous if this was the last one
-      if (posts.length > 1) {
-        if (currentIndex >= posts.length - 1) {
+      if (filteredPosts.length > 1) {
+        if (currentIndex >= filteredPosts.length - 1) {
           setCurrentIndex(0);
         }
       } else {
@@ -363,18 +404,148 @@ function Browse() {
   };
 
   const next = () => {
-    if (navDisabled || posts.length === 0) return;
+    if (navDisabled || filteredPosts.length === 0) return;
     setDirection(1);
-    setCurrentIndex((i) => (i + 1) % posts.length);
+    setCurrentIndex((i) => (i + 1) % filteredPosts.length);
     setNavDisabled(true);
     setTimeout(() => setNavDisabled(false), 200);
   };
   const prev = () => {
-    if (navDisabled || posts.length === 0) return;
+    if (navDisabled || filteredPosts.length === 0) return;
     setDirection(-1);
-    setCurrentIndex((i) => (i - 1 + posts.length) % posts.length);
+    setCurrentIndex((i) => (i - 1 + filteredPosts.length) % filteredPosts.length);
     setNavDisabled(true);
     setTimeout(() => setNavDisabled(false), 200);
+  };
+
+  // Flag and block handlers
+  const handleFlagPost = (post) => {
+    setPostToReport(post);
+    setReportReason("Harassment or Bullying");
+    setShowReportModal(true);
+  };
+
+  const confirmReportPost = async () => {
+    if (!postToReport) return;
+
+    // Close the confirmation modal immediately as requested
+    setShowReportModal(false);
+
+    try {
+      const reporterId = user ? user.uid : "anonymous";
+      const reporterEmail = user ? user.email : "anonymous";
+
+      await addDoc(collection(db, "reports"), {
+        postId: postToReport.id,
+        postTitle: postToReport.title || "",
+        postStory: postToReport.story || "",
+        authorId: postToReport.authorId || "unknown",
+        authorEmail: postToReport.user || "unknown",
+        reporterId,
+        reporterEmail,
+        reason: reportReason,
+        createdAt: new Date(),
+        status: "pending"
+      });
+
+      const updatedFlagged = [...flaggedPosts, postToReport.id];
+      setFlaggedPosts(updatedFlagged);
+
+      const userId = user ? user.uid : "anonymous";
+      localStorage.setItem(`flagged_posts_${userId}`, JSON.stringify(updatedFlagged));
+
+      // Automatically block the author of the reported post
+      const authorIdentifier = postToReport.authorId || postToReport.user;
+      let blockMessage = "";
+      if (authorIdentifier) {
+        const authorName = postToReport.username || usernames[postToReport.user]?.displayName || "Anonymous";
+        
+        // Add to local blocked users state and localStorage
+        const updatedBlocked = [...blockedUsers, authorIdentifier];
+        setBlockedUsers(updatedBlocked);
+        localStorage.setItem(`blocked_users_${userId}`, JSON.stringify(updatedBlocked));
+
+        // Persist blocked user list in Firestore if logged in
+        if (user) {
+          const userRef = doc(db, "usernames", user.uid);
+          await updateDoc(userRef, {
+            blockedUsers: updatedBlocked
+          }).catch(async (err) => {
+            if (err.code === "not-found") {
+              await setDoc(userRef, { blockedUsers: updatedBlocked }, { merge: true });
+            }
+          });
+        }
+        blockMessage = ` and the creator "${authorName}" has been blocked`;
+      }
+
+      setAlertModalMessage(`Thank you. This post has been reported${blockMessage}. All their content has been removed from your feed.`);
+      setShowAlertModal(true);
+      setPostToReport(null);
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      const authorName = postToReport.username || usernames[postToReport.user]?.displayName || "Anonymous";
+      setAlertModalMessage(`Thank you. This post has been reported and the creator "${authorName}" has been blocked. All their content has been removed from your feed.`);
+      setShowAlertModal(true);
+      setPostToReport(null);
+    }
+  };
+
+  const handleBlockUser = (uid, displayName) => {
+    if (!uid) return;
+    setUserToBlock({ id: uid, name: displayName || "Anonymous" });
+    setShowBlockModal(true);
+  };
+
+  const confirmBlockUser = async () => {
+    if (!userToBlock) return;
+
+    // Close the confirmation modal immediately as requested
+    setShowBlockModal(false);
+
+    try {
+      const reporterId = user ? user.uid : "anonymous";
+      const reporterEmail = user ? user.email : "anonymous";
+
+      const updatedBlocked = [...blockedUsers, userToBlock.id];
+      setBlockedUsers(updatedBlocked);
+
+      const userId = user ? user.uid : "anonymous";
+      localStorage.setItem(`blocked_users_${userId}`, JSON.stringify(updatedBlocked));
+
+      if (user) {
+        const userRef = doc(db, "usernames", user.uid);
+        await updateDoc(userRef, {
+          blockedUsers: updatedBlocked
+        }).catch(async (err) => {
+          if (err.code === "not-found") {
+            await setDoc(userRef, { blockedUsers: updatedBlocked }, { merge: true });
+          }
+        });
+      }
+
+      await addDoc(collection(db, "reports"), {
+        postId: "user_blocked_automated",
+        postTitle: `Blocked User: ${userToBlock.name}`,
+        postStory: `User with ID ${userToBlock.id} was blocked by user ${reporterId} (${reporterEmail}) for abusive behavior.`,
+        authorId: userToBlock.id,
+        authorEmail: "unknown",
+        reporterId,
+        reporterEmail,
+        reason: "User Blocked (Automated Abuse Report)",
+        createdAt: new Date(),
+        status: "pending"
+      });
+
+      setAlertModalMessage(`User ${userToBlock.name} has been blocked and reported. All their content has been removed from your feed.`);
+      setShowAlertModal(true);
+      setUserToBlock(null);
+    } catch (error) {
+      console.error("Error blocking user:", error);
+      setAlertModalMessage(`User ${userToBlock.name} has been blocked and reported. All their content has been removed from your feed.`);
+      setShowAlertModal(true);
+      setUserToBlock(null);
+    }
   };
   const variants = {
     enter: (dir) => ({
@@ -402,7 +573,20 @@ function Browse() {
     }),
   };
 
-  const current = posts[currentIndex];
+  const filteredPosts = posts.filter(
+    (post) => 
+      !flaggedPosts.includes(post.id) && 
+      !blockedUsers.includes(post.authorId || post.user)
+  );
+
+  // Adjust currentIndex if it's out of bounds after filtering
+  useEffect(() => {
+    if (filteredPosts.length > 0 && currentIndex >= filteredPosts.length) {
+      setCurrentIndex(Math.max(0, filteredPosts.length - 1));
+    }
+  }, [filteredPosts.length, currentIndex]);
+
+  const current = filteredPosts[currentIndex];
   const meta = current
     ? {
         ...usernames[current.user],
@@ -451,7 +635,7 @@ function Browse() {
               <motion.button
                 className="desktop-nav-arrow"
                 onClick={prev}
-                disabled={posts.length <= 1 || navDisabled}
+                disabled={filteredPosts.length <= 1 || navDisabled}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 aria-label="Previous story"
@@ -539,6 +723,34 @@ function Browse() {
                             whileTap={{ scale: 0.95 }}
                           >
                             🗑️ Delete
+                          </motion.button>
+                        </div>
+                      )}
+
+                      {/* Report/Block Actions */}
+                      {!isOwner && !isEditing && (
+                        <div style={{ ...styles.actionsContainer, marginBottom: 0 }}>
+                          <motion.button
+                            onClick={() => handleBlockUser(current.authorId || current.user, meta?.displayName)}
+                            style={{
+                              ...styles.actionButton,
+                              ...styles.blockButton,
+                            }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            🚫 Block
+                          </motion.button>
+                          <motion.button
+                            onClick={() => handleFlagPost(current)}
+                            style={{
+                              ...styles.actionButton,
+                              ...styles.reportButton,
+                            }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            ⚠️ Report
                           </motion.button>
                         </div>
                       )}
@@ -634,7 +846,7 @@ function Browse() {
               <motion.button
                 className="desktop-nav-arrow"
                 onClick={next}
-                disabled={posts.length <= 1 || navDisabled}
+                disabled={filteredPosts.length <= 1 || navDisabled}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 aria-label="Next story"
@@ -649,14 +861,14 @@ function Browse() {
               <button
                 className="mobile-nav-btn"
                 onClick={prev}
-                disabled={posts.length <= 1 || navDisabled}
+                disabled={filteredPosts.length <= 1 || navDisabled}
               >
                 ← Prev
               </button>
               <button
                 className="mobile-nav-btn"
                 onClick={next}
-                disabled={posts.length <= 1 || navDisabled}
+                disabled={filteredPosts.length <= 1 || navDisabled}
               >
                 Next →
               </button>
@@ -703,6 +915,146 @@ function Browse() {
                   whileTap={{ scale: 0.95 }}
                 >
                   Keep Story
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Report Confirmation Modal */}
+      <AnimatePresence>
+        {showReportModal && postToReport && (
+          <motion.div
+            style={styles.modalOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowReportModal(false)}
+          >
+            <motion.div
+              style={styles.modal}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={styles.modalTitle}>⚠️ Report objectionable content?</h3>
+              <p style={styles.modalText}>
+                Reporting this story hides it from your feed instantly. Developers will review this post within 24 hours.
+              </p>
+              
+              <div style={styles.selectContainer}>
+                <label style={styles.selectLabel}>Select Reason:</label>
+                <select
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  style={styles.select}
+                >
+                  <option value="Harassment or Bullying">Harassment or Bullying</option>
+                  <option value="Hate Speech or Discrimination">Hate Speech or Discrimination</option>
+                  <option value="Profanity or Offensive Language">Profanity or Offensive Language</option>
+                  <option value="Explicit or Sexual Content">Explicit or Sexual Content</option>
+                  <option value="Spam or Misleading">Spam or Misleading</option>
+                  <option value="Other Objectionable Content">Other Objectionable Content</option>
+                </select>
+              </div>
+
+              <div style={styles.modalActions}>
+                <motion.button
+                  onClick={confirmReportPost}
+                  style={styles.confirmReportButton}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Submit Report
+                </motion.button>
+                <motion.button
+                  onClick={() => setShowReportModal(false)}
+                  style={styles.cancelButton}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Cancel
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Block Confirmation Modal */}
+      <AnimatePresence>
+        {showBlockModal && userToBlock && (
+          <motion.div
+            style={styles.modalOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowBlockModal(false)}
+          >
+            <motion.div
+              style={styles.modal}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={styles.modalTitle}>🚫 Block user "{userToBlock.name}"?</h3>
+              <p style={styles.modalText}>
+                You will no longer see any stories from this user. This action will also submit a report to the developer.
+              </p>
+              <div style={styles.modalActions}>
+                <motion.button
+                  onClick={confirmBlockUser}
+                  style={styles.confirmDeleteButton}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Block User
+                </motion.button>
+                <motion.button
+                  onClick={() => setShowBlockModal(false)}
+                  style={styles.cancelButton}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Cancel
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Custom Alert/Success Modal */}
+      <AnimatePresence>
+        {showAlertModal && (
+          <motion.div
+            style={styles.modalOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowAlertModal(false)}
+          >
+            <motion.div
+              style={styles.modal}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={styles.successIconWrapper}>✅</div>
+              <h3 style={styles.modalTitle}>Success</h3>
+              <p style={styles.modalText}>{alertModalMessage}</p>
+              <div style={styles.modalActions}>
+                <motion.button
+                  onClick={() => setShowAlertModal(false)}
+                  style={styles.alertOkButton}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  OK
                 </motion.button>
               </div>
             </motion.div>
@@ -1118,6 +1470,79 @@ const styles = {
     transition: "all 0.2s ease",
     outline: "none",
     boxShadow: "0 4px 15px rgba(239, 68, 68, 0.2)",
+  },
+
+  blockButton: {
+    borderColor: "rgba(239, 68, 68, 0.2)",
+    background: "rgba(254, 242, 242, 0.9)",
+    color: "#dc2626",
+  },
+
+  reportButton: {
+    borderColor: "rgba(245, 158, 11, 0.2)",
+    background: "rgba(254, 243, 199, 0.9)",
+    color: "#d97706",
+  },
+
+  selectContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.5rem",
+    textAlign: "left",
+    marginBottom: "1.5rem",
+    width: "100%",
+  },
+
+  selectLabel: {
+    fontSize: "0.85rem",
+    fontWeight: "600",
+    color: "#64748b",
+  },
+
+  select: {
+    padding: "12px 16px",
+    borderRadius: "12px",
+    border: "2px solid rgba(203, 213, 225, 0.3)",
+    backgroundColor: "rgba(248, 250, 252, 0.8)",
+    color: "#1e293b",
+    fontSize: "0.95rem",
+    outline: "none",
+    width: "100%",
+  },
+
+  confirmReportButton: {
+    background: "linear-gradient(135deg, #f59e0b, #d97706)",
+    border: "2px solid rgba(245, 158, 11, 0.3)",
+    borderRadius: "12px",
+    padding: "12px 24px",
+    color: "#ffffff",
+    fontSize: "0.9rem",
+    fontWeight: "700",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    outline: "none",
+    boxShadow: "0 4px 15px rgba(245, 158, 11, 0.2)",
+  },
+
+  successIconWrapper: {
+    fontSize: "3.5rem",
+    marginBottom: "1rem",
+    display: "block",
+    textAlign: "center",
+  },
+
+  alertOkButton: {
+    background: "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
+    border: "2px solid rgba(168, 85, 247, 0.3)",
+    borderRadius: "12px",
+    padding: "12px 36px",
+    color: "#ffffff",
+    fontSize: "0.95rem",
+    fontWeight: "700",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    outline: "none",
+    boxShadow: "0 4px 15px rgba(168, 85, 247, 0.2)",
   },
 };
 

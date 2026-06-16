@@ -22,6 +22,28 @@ const Leaderboard = () => {
   const [loading, setLoading] = useState(false);
   const [user] = useAuthState(auth);
 
+  // Safety content filtering lists
+  const [blockedUsers, setBlockedUsers] = useState([]);
+  const [flaggedPosts, setFlaggedPosts] = useState([]);
+
+  useEffect(() => {
+    const userId = user ? user.uid : "anonymous";
+    const localBlocked = localStorage.getItem(`blocked_users_${userId}`);
+    if (localBlocked) {
+      setBlockedUsers(JSON.parse(localBlocked));
+    }
+    const localFlagged = localStorage.getItem(`flagged_posts_${userId}`);
+    if (localFlagged) {
+      setFlaggedPosts(JSON.parse(localFlagged));
+    }
+  }, [user]);
+
+  const filteredPosts = posts.filter(
+    (post) => 
+      !flaggedPosts.includes(post.id) && 
+      !blockedUsers.includes(post.authorId || post.user)
+  );
+
   const isMobile = screenWidth < 768;
 
   useEffect(() => {
@@ -276,7 +298,7 @@ const Leaderboard = () => {
         </h1>
       </div>
 
-      {posts.length === 0 ? (
+      {filteredPosts.length === 0 ? (
         <div style={styles.emptyState}>
           <div style={styles.emptyIcon}>🌌</div>
           <h3 style={styles.emptyTitle}>The Arena Awaits</h3>
@@ -291,14 +313,14 @@ const Leaderboard = () => {
           <div style={styles.statsBar}>
             <div style={styles.stat}>
               <span style={styles.statNumber}>
-                {posts.reduce((sum, post) => sum + post.totalReactions, 0)}
+                {filteredPosts.reduce((sum, post) => sum + post.totalReactions, 0)}
               </span>
               <span style={styles.statLabel}>Total Reactions</span>
             </div>
           </div>
 
           <div style={styles.list}>
-            {posts.slice(0, 10).map((post, index) => {
+            {filteredPosts.slice(0, 10).map((post, index) => {
               const displayName = post.username || "Anonymous";
               const emoji = post.emoji || "👤";
               const color = post.color || "#ccc";

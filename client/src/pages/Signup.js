@@ -8,6 +8,7 @@ function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
+  const [agreedToEula, setAgreedToEula] = useState(false);
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -215,7 +216,26 @@ function Signup() {
             <div style={styles.inputUnderline}></div>
           </div>
 
-          <button type="submit" className="signup-button" style={styles.button}>
+          <div style={styles.checkboxGroup}>
+            <input
+              type="checkbox"
+              id="eula-agree"
+              checked={agreedToEula}
+              onChange={(e) => setAgreedToEula(e.target.checked)}
+              style={styles.checkbox}
+              required
+            />
+            <label htmlFor="eula-agree" style={styles.checkboxLabel}>
+              I agree to the <Link to="/eula" target="_blank" style={styles.inlineLink}>EULA</Link> and <Link to="/privacy" target="_blank" style={styles.inlineLink}>Privacy Policy</Link> (including zero tolerance for objectionable content).
+            </label>
+          </div>
+
+          <button 
+            type="submit" 
+            className="signup-button" 
+            style={agreedToEula ? styles.button : { ...styles.button, ...styles.buttonDisabled }}
+            disabled={!agreedToEula}
+          >
             <span style={styles.buttonText}>Create Account</span>
             <div style={styles.buttonShimmer}></div>
           </button>
@@ -418,6 +438,38 @@ const styles = {
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
     backgroundClip: "text",
+  },
+  checkboxGroup: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "0.75rem",
+    marginBottom: "1.5rem",
+    padding: "0 0.5rem",
+    textAlign: "left",
+  },
+  checkbox: {
+    marginTop: "4px",
+    width: "16px",
+    height: "16px",
+    cursor: "pointer",
+    accentColor: "#a855f7",
+  },
+  checkboxLabel: {
+    fontSize: "0.85rem",
+    color: "#475569",
+    lineHeight: "1.4",
+    cursor: "pointer",
+  },
+  inlineLink: {
+    color: "#a855f7",
+    textDecoration: "underline",
+    fontWeight: "600",
+  },
+  buttonDisabled: {
+    background: "linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%)",
+    boxShadow: "none",
+    cursor: "not-allowed",
+    opacity: "0.6",
   },
 };
 

@@ -11,6 +11,18 @@ import {
   where,
 } from "firebase/firestore";
 
+const OBJECTIONABLE_WORDS = [
+  "abuse", "harass", "kill yourself", "kys", "slur", "nigger", "faggot", "retard", "cunt",
+  "bitch", "whore", "bastard", "dick", "pussy", "asshole", "hate speech", "porn", "sex",
+  "naked", "terrorist", "bomb", "kill all", "threaten", "fuck", "shit", "vulgar", "explicit"
+];
+
+const containsObjectionableContent = (text) => {
+  if (!text) return false;
+  const lowerText = text.toLowerCase();
+  return OBJECTIONABLE_WORDS.some(word => lowerText.includes(word));
+};
+
 function Post() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -178,6 +190,11 @@ function Post() {
     const actualStoryContent = storyBody.slice(prefix.length).trim();
     if (!title.trim() || !actualStoryContent) {
       setError("Both title and story are required.");
+      return;
+    }
+
+    if (containsObjectionableContent(title) || containsObjectionableContent(actualStoryContent)) {
+      setError("Warning: Your post contains content that violates our safety policy. Please remove any objectionable, abusive, or offensive terms and try again.");
       return;
     }
 
