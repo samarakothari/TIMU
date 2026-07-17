@@ -23,6 +23,7 @@ const USERNAME_COLORS = ["#f43f5e", "#0ea5e9", "#f59e0b", "#22c55e", "#8b5cf6"];
 
 function Browse() {
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const [navDisabled, setNavDisabled] = useState(false);
@@ -243,6 +244,109 @@ function Browse() {
                 color: #475569;
                 letter-spacing: 0.5px;
             }
+
+            @keyframes shimmer {
+                0% { background-position: -200% 0; }
+                100% { background-position: 200% 0; }
+            }
+            
+            .skeleton-shimmer {
+                background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%);
+                background-size: 200% 100%;
+                animation: shimmer 1.5s infinite linear;
+            }
+
+            .skeleton-card {
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(203, 213, 225, 0.2);
+                border-radius: 24px;
+                padding: 2.5rem;
+                box-shadow: 0 20px 40px rgba(30, 41, 59, 0.08), 0 0 60px rgba(251, 113, 133, 0.05);
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            @media (max-width: 767px) {
+                .skeleton-card {
+                    padding: 1.25rem;
+                    border-radius: 16px;
+                }
+            }
+            
+            .skeleton-header {
+                margin-bottom: 1.5rem;
+                padding-bottom: 1.5rem;
+                border-bottom: 1px solid rgba(203, 213, 225, 0.2);
+            }
+            
+            .skeleton-profile {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+            
+            .skeleton-avatar {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+            }
+            
+            .skeleton-meta {
+                display: flex;
+                flex-direction: column;
+                gap: 0.35rem;
+            }
+            
+            .skeleton-username {
+                height: 18px;
+                width: 140px;
+                border-radius: 4px;
+            }
+            
+            .skeleton-time {
+                height: 12px;
+                width: 80px;
+                border-radius: 4px;
+            }
+            
+            .skeleton-title {
+                height: 32px;
+                width: 65%;
+                border-radius: 6px;
+                margin-bottom: 1.5rem;
+            }
+            
+            .skeleton-story-container {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                margin-bottom: 1.5rem;
+                padding-left: 0.75rem;
+                border-left: 3px solid rgba(251, 113, 133, 0.15);
+            }
+            
+            .skeleton-line {
+                height: 16px;
+                width: 100%;
+                border-radius: 4px;
+            }
+            
+            .skeleton-reactions-container {
+                border-top: 1px solid rgba(203, 213, 225, 0.2);
+                padding-top: 1.5rem;
+                display: flex;
+                gap: 0.75rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .skeleton-reaction-btn {
+                height: 44px;
+                width: 76px;
+                border-radius: 16px;
+            }
         `;
     document.head.appendChild(style);
 
@@ -256,53 +360,62 @@ function Browse() {
   useEffect(() => {
     const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, async (snapshot) => {
-      const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-      setPosts(docs);
+      try {
+        const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setPosts(docs);
 
-      const uids = [...new Set(docs.map((p) => p.user))];
-      const map = {};
-      await Promise.all(
-        uids.map(async (uid) => {
-          try {
-            const ref = doc(db, "usernames", uid);
-            const snap = await getDoc(ref);
+        const uids = [...new Set(docs.map((p) => p.user))];
+        const map = {};
+        await Promise.all(
+          uids.map(async (uid) => {
+            try {
+              const ref = doc(db, "usernames", uid);
+              const snap = await getDoc(ref);
 
-            if (snap.exists()) {
-              const d = snap.data();
-              map[uid] = {
-                ...d,
-                displayName: d.username || d.anonName || "Anonymous",
-              };
-            } else {
-              const fallbackAnimal =
-                FALLBACK_NAMES[
-                Math.floor(Math.random() * FALLBACK_NAMES.length)
-                ];
-              const rand = Math.floor(100 + Math.random() * 900);
-              const emoji =
-                PROFILE_EMOJIS[
-                Math.floor(Math.random() * PROFILE_EMOJIS.length)
-                ];
-              const color =
-                USERNAME_COLORS[
-                Math.floor(Math.random() * USERNAME_COLORS.length)
-                ];
-              const anonName = `Anonymous ${fallbackAnimal} #${rand}`;
-              const newProfile = {
-                anonName,
-                emoji,
-                color,
-                displayName: anonName,
-              };
-              await setDoc(ref, newProfile);
-              map[uid] = newProfile;
+              if (snap.exists()) {
+                const d = snap.data();
+                map[uid] = {
+                  ...d,
+                  displayName: d.username || d.anonName || "Anonymous",
+                };
+              } else {
+                const fallbackAnimal =
+                  FALLBACK_NAMES[
+                  Math.floor(Math.random() * FALLBACK_NAMES.length)
+                  ];
+                const rand = Math.floor(100 + Math.random() * 900);
+                const emoji =
+                  PROFILE_EMOJIS[
+                  Math.floor(Math.random() * PROFILE_EMOJIS.length)
+                  ];
+                const color =
+                  USERNAME_COLORS[
+                  Math.floor(Math.random() * USERNAME_COLORS.length)
+                  ];
+                const anonName = `Anonymous ${fallbackAnimal} #${rand}`;
+                const newProfile = {
+                  anonName,
+                  emoji,
+                  color,
+                  displayName: anonName,
+                };
+                await setDoc(ref, newProfile);
+                map[uid] = newProfile;
+              }
+            } catch {
+              map[uid] = { displayName: "Anonymous", emoji: "👻", color: "#475569" };
             }
-          } catch {
-            map[uid] = { displayName: "Anonymous", emoji: "👻", color: "#475569" };
-          }
-        })
-      );
-      setUsernames(map);
+          })
+        );
+        setUsernames(map);
+      } catch (err) {
+        console.error("Error processing snapshot:", err);
+      } finally {
+        setLoading(false);
+      }
+    }, (error) => {
+      console.error("Firestore onSnapshot error:", error);
+      setLoading(false);
     });
     return () => unsub();
   }, []);
@@ -691,7 +804,56 @@ Timestamp: ${new Date().toLocaleString()}
         <p style={styles.subtitle}>Real stories, real chaos</p>
       </motion.div>
 
-      {!current ? (
+      {loading ? (
+        <div style={styles.contentWrapper}>
+          <div className="browse-layout-wrapper">
+            {!isMobile && (
+              <button
+                className="desktop-nav-arrow"
+                disabled
+                style={{ opacity: 0.15 }}
+              >
+                ‹
+              </button>
+            )}
+
+            <div style={styles.postContainer}>
+              <div className="skeleton-card">
+                <div className="skeleton-header">
+                  <div className="skeleton-profile">
+                    <div className="skeleton-avatar skeleton-shimmer"></div>
+                    <div className="skeleton-meta">
+                      <div className="skeleton-username skeleton-shimmer"></div>
+                      <div className="skeleton-time skeleton-shimmer"></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="skeleton-title skeleton-shimmer"></div>
+                <div className="skeleton-story-container">
+                  <div className="skeleton-line skeleton-shimmer"></div>
+                  <div className="skeleton-line skeleton-shimmer"></div>
+                  <div className="skeleton-line skeleton-shimmer" style={{ width: "80%" }}></div>
+                </div>
+                <div className="skeleton-reactions-container">
+                  <div className="skeleton-reaction-btn skeleton-shimmer"></div>
+                  <div className="skeleton-reaction-btn skeleton-shimmer"></div>
+                  <div className="skeleton-reaction-btn skeleton-shimmer"></div>
+                </div>
+              </div>
+            </div>
+
+            {!isMobile && (
+              <button
+                className="desktop-nav-arrow"
+                disabled
+                style={{ opacity: 0.15 }}
+              >
+                ›
+              </button>
+            )}
+          </div>
+        </div>
+      ) : !current ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
